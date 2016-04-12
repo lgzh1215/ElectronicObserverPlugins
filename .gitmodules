@@ -1,3 +1,4 @@
 [submodule "ElectronicObserver"]
 	path = ElectronicObserver
 	url = https://github.com/lgzh1215/ElectronicObserver
+	branch = plugin
