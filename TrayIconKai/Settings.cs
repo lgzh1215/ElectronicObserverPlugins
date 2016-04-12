@@ -107,6 +107,11 @@ namespace TrayIconKai
             if (HotKeyRegister.IsCombineKey(registerModifiers, registerKey))
                 textBox.Text = string.Format("{0}+{1}",
                             registerModifiers, GetKeysString(registerKey));
+
+            if (plugin.GetVolumeManager() == null)
+            {
+                muteWhenBossCome.Enabled = false;
+            }
         }
 
         public override bool Save()

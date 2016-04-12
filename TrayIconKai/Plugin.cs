@@ -1,8 +1,11 @@
 ﻿using BrowserLib;
+using CoreAudioApi;
 using ElectronicObserver.Utility.Storage;
 using ElectronicObserver.Window;
 using ElectronicObserver.Window.Plugins;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
@@ -21,6 +24,7 @@ namespace TrayIconKai
         private bool oldMuteState = true;
 
         private HotKeyRegister hotKeyToRegister;
+        private VolumeManager volumeManager;
 
         public Config Config { get; private set; }
 
@@ -31,7 +35,7 @@ namespace TrayIconKai
 
         public override string Version
         {
-            get { return "1.0.0.2"; }
+            get { return "1.0.0.3"; }
         }
 
         public override PluginSettingControl GetSettings()
@@ -42,13 +46,15 @@ namespace TrayIconKai
         public override bool RunService(FormMain main)
         {
             mainForm = main;
-            Config blankConfig = new Config();
-            //妈个鸡！为什么这个Load不是静态方法！
-            Config config = (Config)blankConfig.Load(ConfigFile);
-            if (config != null)
-                UpdateConfig(config);
-            else
-                UpdateConfig(blankConfig);
+
+            Config config = new Config();
+            if (System.IO.File.Exists(ConfigFile))
+            {
+                Config loadConfig = (Config)config.Load(ConfigFile);
+                if (loadConfig != null)
+                    config = loadConfig;
+            }
+            UpdateConfig(config);
 
             // 最小化事件
             oldWindowState = main.WindowState;
@@ -102,8 +108,7 @@ namespace TrayIconKai
         {
             if (HotKeyRegister.IsCombineKey(Config.RegisterModifiers, Config.RegisterKey))
             {
-                if (hotKeyToRegister != null)
-                    UnregisterBossKey();
+                UnregisterBossKey();
                 if (Config.GlobalBossKey)
                     hotKeyToRegister = new GlobalHotKeyRegister(mainForm.Handle, 100,
                         Config.RegisterModifiers, Config.RegisterKey);
@@ -134,28 +139,45 @@ namespace TrayIconKai
             mainForm.WindowState = oldWindowState;
         }
 
+        internal VolumeManager GetVolumeManager()
+        {
+            if (volumeManager == null)
+            {
+                IntPtr browserHwnd = FindWindowEx(mainForm.Browser.Handle, IntPtr.Zero, null, null);
+                uint processID;
+                GetWindowThreadProcessId(browserHwnd, out processID);
+                volumeManager = new VolumeManager(processID);
+            }
+            return volumeManager;
+        }
+
         private void Mute()
         {
-            //如果已经静音了就不管了！
-            BrowserConfiguration config = mainForm.fBrowser.Configuration;
-            if (!config.IsMute)
+            try
             {
-                oldMuteState = false;
-                config.IsMute = true;
-                mainForm.fBrowser.ConfigurationUpdated(config);
+                VolumeManager volume = GetVolumeManager();
+                if (volume != null && !volume.IsMute)
+                {
+                    volume.IsMute = true;
+                    oldMuteState = false;
+                }
             }
+            catch { }   //浏览器已打开但未载入网页
         }
 
         private void UnMute()
         {
-            //如果原来不是静音则恢复！
-            if (!oldMuteState)
+            try
             {
-                oldMuteState = true;
-                BrowserConfiguration config = mainForm.fBrowser.Configuration;
-                config.IsMute = false;
-                mainForm.fBrowser.ConfigurationUpdated(config);
+                if (!oldMuteState)
+                {
+                    VolumeManager volume = GetVolumeManager();
+                    if (volume.IsMute)
+                        volume.IsMute = false;
+                    oldMuteState = true;
+                }
             }
+            catch { }    //浏览器已打开但未载入网页
         }
 
         private void BossKeyPressed(object sender, EventArgs e)
@@ -164,9 +186,9 @@ namespace TrayIconKai
             if (visible)
             {
                 //BOSS IS COMING!！!
-                HideWindow(); 
+                HideWindow();
                 //不使用全局热键时不能隐藏托盘图标
-                if (Config.HideTrayIcon && Config.GlobalBossKey && notifyIcon != null) 
+                if (Config.HideTrayIcon && Config.GlobalBossKey && notifyIcon != null)
                     notifyIcon.Visible = false;
                 if (Config.MuteWhenBossCome)
                     Mute();
@@ -223,6 +245,12 @@ namespace TrayIconKai
                 UnMute();
             }
         }
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        static extern IntPtr FindWindowEx(IntPtr parentHandle, IntPtr childAfter, string lclassName, string windowTitle);
+
+        [DllImport("User32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint ID);
     }
 
     [DataContract(Name = "TrayIconKai")]
@@ -460,5 +488,76 @@ namespace TrayIconKai
         Alt = 1,
         Control = 2,
         Shift = 4,
+    }
+
+    internal class VolumeManager
+    {
+        private const string ErrorMessageNotFound = "指定したプロセスIDの音量オブジェクトは存在しません。";
+
+        public uint ProcessID { get; private set; }
+
+        public VolumeManager(uint processID)
+        {
+            ProcessID = processID;
+        }
+
+        private SimpleAudioVolume simpleAudioVolume;
+
+        private SimpleAudioVolume GetVolumeObject()
+        {
+            if (simpleAudioVolume == null)
+            {
+                var deviceEnumerator = new MMDeviceEnumerator();
+                MMDevice devices;
+                try
+                {
+                    devices = deviceEnumerator.GetDefaultAudioEndpoint(EDataFlow.eRender, ERole.eMultimedia);
+                }
+                catch
+                {
+                    return null;
+                }
+                for (int i = 0; i < devices.AudioSessionManager.Sessions.Count; i++)
+                {
+                    var session = devices.AudioSessionManager.Sessions[i];
+                    if (session.ProcessID == ProcessID)
+                    {
+                        simpleAudioVolume = session.SimpleAudioVolume;
+                        break;
+                    }
+                }
+            }
+            return simpleAudioVolume;
+        }
+
+        private bool GetApplicationMute()
+        {
+            var volume = GetVolumeObject();
+            if (volume == null)
+                throw new ArgumentException(ErrorMessageNotFound);
+            return volume.Mute;
+        }
+
+        private void SetApplicationMute(bool mute)
+        {
+            var volume = GetVolumeObject();
+            if (volume == null)
+                throw new ArgumentException(ErrorMessageNotFound);
+
+            volume.Mute = mute;
+        }
+
+        public bool IsMute
+        {
+            get { return GetApplicationMute(); }
+            set { SetApplicationMute(value); }
+        }
+
+        public bool ToggleMute()
+        {
+            bool mute = !GetApplicationMute();
+            SetApplicationMute(mute);
+            return mute;
+        }
     }
 }
