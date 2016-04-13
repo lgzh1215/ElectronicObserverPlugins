@@ -97,21 +97,18 @@ namespace TrayIconKai
 
             enableBossKey.Checked = config.EnableBossKey;
             globalBossKey.Checked = config.GlobalBossKey;
-            hideTrayIcon.Checked = config.HideTrayIcon;
+            hideTrayIconWhenBossCome.Checked = config.HideTrayIconWhenBossCome;
             muteWhenBossCome.Checked = config.MuteWhenBossCome;
 
             registerKey = config.RegisterKey;
             registerModifiers = config.RegisterModifiers;
 
+            activateWhenShow.Checked = config.ActivateWhenShow;
+
             //显示之前保存的热键！
             if (HotKeyRegister.IsCombineKey(registerModifiers, registerKey))
                 textBox.Text = string.Format("{0}+{1}",
                             registerModifiers, GetKeysString(registerKey));
-
-            if (plugin.GetVolumeManager() == null)
-            {
-                muteWhenBossCome.Enabled = false;
-            }
         }
 
         public override bool Save()
@@ -124,11 +121,13 @@ namespace TrayIconKai
 
             newConfig.EnableBossKey = enableBossKey.Checked;
             newConfig.GlobalBossKey = globalBossKey.Checked;
-            newConfig.HideTrayIcon = hideTrayIcon.Checked;
+            newConfig.HideTrayIconWhenBossCome = hideTrayIconWhenBossCome.Checked;
             newConfig.MuteWhenBossCome = muteWhenBossCome.Checked;
 
             newConfig.RegisterKey = registerKey;
             newConfig.RegisterModifiers = registerModifiers;
+
+            newConfig.ActivateWhenShow = activateWhenShow.Checked;
 
             plugin.UpdateConfig(newConfig);
             plugin.SaveConfig();

@@ -30,8 +30,10 @@
         {
             this.tabControl = new System.Windows.Forms.TabControl();
             this.tabPage = new System.Windows.Forms.TabPage();
+            this.activateWhenShow = new System.Windows.Forms.CheckBox();
             this.bossKeyGroupBox = new System.Windows.Forms.GroupBox();
-            this.hideTrayIcon = new System.Windows.Forms.CheckBox();
+            this.muteWhenBossCome = new System.Windows.Forms.CheckBox();
+            this.hideTrayIconWhenBossCome = new System.Windows.Forms.CheckBox();
             this.globalBossKey = new System.Windows.Forms.CheckBox();
             this.textBox = new System.Windows.Forms.TextBox();
             this.label = new System.Windows.Forms.Label();
@@ -40,7 +42,6 @@
             this.hideWhenClickTrayIcon = new System.Windows.Forms.CheckBox();
             this.hideWhenMinimized = new System.Windows.Forms.CheckBox();
             this.enableTrayIcon = new System.Windows.Forms.CheckBox();
-            this.muteWhenBossCome = new System.Windows.Forms.CheckBox();
             this.tabControl.SuspendLayout();
             this.tabPage.SuspendLayout();
             this.bossKeyGroupBox.SuspendLayout();
@@ -61,6 +62,7 @@
             // 
             // tabPage
             // 
+            this.tabPage.Controls.Add(this.activateWhenShow);
             this.tabPage.Controls.Add(this.bossKeyGroupBox);
             this.tabPage.Controls.Add(this.enableBossKey);
             this.tabPage.Controls.Add(this.trayIconGroupBox);
@@ -73,11 +75,21 @@
             this.tabPage.Text = "托盘图标和老板键";
             this.tabPage.UseVisualStyleBackColor = true;
             // 
+            // activateWhenShow
+            // 
+            this.activateWhenShow.AutoSize = true;
+            this.activateWhenShow.Location = new System.Drawing.Point(6, 267);
+            this.activateWhenShow.Name = "activateWhenShow";
+            this.activateWhenShow.Size = new System.Drawing.Size(216, 16);
+            this.activateWhenShow.TabIndex = 6;
+            this.activateWhenShow.Text = "恢复被隐藏的窗口时将其激活(前置)";
+            this.activateWhenShow.UseVisualStyleBackColor = true;
+            // 
             // bossKeyGroupBox
             // 
             this.bossKeyGroupBox.AutoSize = true;
             this.bossKeyGroupBox.Controls.Add(this.muteWhenBossCome);
-            this.bossKeyGroupBox.Controls.Add(this.hideTrayIcon);
+            this.bossKeyGroupBox.Controls.Add(this.hideTrayIconWhenBossCome);
             this.bossKeyGroupBox.Controls.Add(this.globalBossKey);
             this.bossKeyGroupBox.Controls.Add(this.textBox);
             this.bossKeyGroupBox.Controls.Add(this.label);
@@ -88,15 +100,25 @@
             this.bossKeyGroupBox.TabStop = false;
             this.bossKeyGroupBox.Text = "老板键";
             // 
-            // hideTrayIcon
+            // muteWhenBossCome
             // 
-            this.hideTrayIcon.AutoSize = true;
-            this.hideTrayIcon.Location = new System.Drawing.Point(6, 69);
-            this.hideTrayIcon.Name = "hideTrayIcon";
-            this.hideTrayIcon.Size = new System.Drawing.Size(168, 16);
-            this.hideTrayIcon.TabIndex = 3;
-            this.hideTrayIcon.Text = "按下老板键时隐藏托盘图标";
-            this.hideTrayIcon.UseVisualStyleBackColor = true;
+            this.muteWhenBossCome.AutoSize = true;
+            this.muteWhenBossCome.Location = new System.Drawing.Point(6, 91);
+            this.muteWhenBossCome.Name = "muteWhenBossCome";
+            this.muteWhenBossCome.Size = new System.Drawing.Size(144, 16);
+            this.muteWhenBossCome.TabIndex = 4;
+            this.muteWhenBossCome.Text = "按下老板键时关闭声音";
+            this.muteWhenBossCome.UseVisualStyleBackColor = true;
+            // 
+            // hideTrayIconWhenBossCome
+            // 
+            this.hideTrayIconWhenBossCome.AutoSize = true;
+            this.hideTrayIconWhenBossCome.Location = new System.Drawing.Point(6, 69);
+            this.hideTrayIconWhenBossCome.Name = "hideTrayIconWhenBossCome";
+            this.hideTrayIconWhenBossCome.Size = new System.Drawing.Size(168, 16);
+            this.hideTrayIconWhenBossCome.TabIndex = 3;
+            this.hideTrayIconWhenBossCome.Text = "按下老板键时隐藏托盘图标";
+            this.hideTrayIconWhenBossCome.UseVisualStyleBackColor = true;
             // 
             // globalBossKey
             // 
@@ -178,16 +200,6 @@
             this.enableTrayIcon.Text = "启用托盘图标";
             this.enableTrayIcon.UseVisualStyleBackColor = true;
             // 
-            // muteWhenBossCome
-            // 
-            this.muteWhenBossCome.AutoSize = true;
-            this.muteWhenBossCome.Location = new System.Drawing.Point(6, 91);
-            this.muteWhenBossCome.Name = "muteWhenBossCome";
-            this.muteWhenBossCome.Size = new System.Drawing.Size(144, 16);
-            this.muteWhenBossCome.TabIndex = 4;
-            this.muteWhenBossCome.Text = "按下老板键时关闭声音";
-            this.muteWhenBossCome.UseVisualStyleBackColor = true;
-            // 
             // Settings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -221,7 +233,8 @@
         private System.Windows.Forms.Label label;
         private System.Windows.Forms.TextBox textBox;
         private System.Windows.Forms.CheckBox globalBossKey;
-        private System.Windows.Forms.CheckBox hideTrayIcon;
+        private System.Windows.Forms.CheckBox hideTrayIconWhenBossCome;
         private System.Windows.Forms.CheckBox muteWhenBossCome;
+        private System.Windows.Forms.CheckBox activateWhenShow;
     }
 }
