@@ -1,12 +1,8 @@
-﻿using BrowserLib;
-using CoreAudioApi;
+﻿using CoreAudioApi;
 using ElectronicObserver.Utility.Storage;
 using ElectronicObserver.Window;
 using ElectronicObserver.Window.Plugins;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 using System.Windows.Forms;
@@ -56,14 +52,13 @@ namespace TrayIconKai
             oldWindowState = main.WindowState;
 
             //载入配置
-            Config config = new Config();
+            Config = new Config();
             if (System.IO.File.Exists(ConfigFile))
             {
-                Config loadConfig = (Config)config.Load(ConfigFile);
+                Config loadConfig = (Config)Config.Load(ConfigFile);
                 if (loadConfig != null)
-                    config = loadConfig;
+                    UpdateConfig(loadConfig);
             }
-            UpdateConfig(config);
 
             main.SizeChanged += Main_SizeChanged;
             main.FormClosed += Main_FormClosed;
@@ -80,7 +75,6 @@ namespace TrayIconKai
                 HideWhenMinimized = Config.HideWhenMinimized,
 
                 EnableBossKey = Config.EnableBossKey,
-                GlobalBossKey = Config.GlobalBossKey,
                 HideTrayIconWhenBossCome = Config.HideTrayIconWhenBossCome,
                 MuteWhenBossCome = Config.MuteWhenBossCome,
 
@@ -97,7 +91,6 @@ namespace TrayIconKai
             Config.HideWhenMinimized = newConfig.HideWhenMinimized;
 
             Config.EnableBossKey = newConfig.EnableBossKey;
-            Config.GlobalBossKey = newConfig.GlobalBossKey;
             Config.HideTrayIconWhenBossCome = newConfig.HideTrayIconWhenBossCome;
             Config.MuteWhenBossCome = newConfig.MuteWhenBossCome;
 
@@ -158,12 +151,8 @@ namespace TrayIconKai
             if (HotKeyRegister.IsCombineKey(Config.RegisterModifiers, Config.RegisterKey))
             {
                 UnregisterBossKey();
-                if (Config.GlobalBossKey)
-                    hotKeyToRegister = new GlobalHotKeyRegister(mainForm.Handle, 100,
-                        Config.RegisterModifiers, Config.RegisterKey);
-                else
-                    hotKeyToRegister = new LocalHotKeyRegister(mainForm,
-                        Config.RegisterModifiers, Config.RegisterKey);
+                hotKeyToRegister = new HotKeyRegister(mainForm.Handle, 100,
+                    Config.RegisterModifiers, Config.RegisterKey);
                 hotKeyToRegister.HotKeyPressed += new EventHandler(BossKeyPressed);
             }
         }
@@ -195,11 +184,11 @@ namespace TrayIconKai
             if (volumeManager == null)
             {
                 //获得浏览器进程的窗口句柄
-                IntPtr browserHwnd = FindWindowEx(mainForm.Browser.Handle, IntPtr.Zero, null, null);
+                IntPtr browserHwnd = NativeMethods.FindWindowEx(mainForm.Browser.Handle, IntPtr.Zero, null, null);
                 if (browserHwnd == IntPtr.Zero) return null;
                 //获得浏览器进程的PID
                 uint processID;
-                GetWindowThreadProcessId(browserHwnd, out processID);
+                NativeMethods.GetWindowThreadProcessId(browserHwnd, out processID);
                 if (processID == 0U) return null;
                 volumeManager = new VolumeManager(processID);
             }
@@ -241,18 +230,8 @@ namespace TrayIconKai
             {
                 //BOSS IS COMING!！!
                 HideWindow();
-                if (Config.GlobalBossKey)
-                {
-                    //使用全局热键时才能隐藏托盘图标
-                    if (Config.HideTrayIconWhenBossCome)
-                        HideTrayIcon();
-                }
-                else
-                {
-                    //非全局热键但是没启用托盘时，开启一个用于复原窗口的托盘图标
-                    if (!Config.EnableTrayIcon)
-                        CreateTrayIcon();
-                }
+                if (Config.HideTrayIconWhenBossCome)
+                    HideTrayIcon();
                 if (Config.MuteWhenBossCome)
                     Mute();
             }
@@ -297,19 +276,10 @@ namespace TrayIconKai
             else
             {
                 ShowWindow();
-                //非全局热键但是没启用托盘时，开启一个一次性的托盘图标用于复原窗口
-                if (!Config.EnableTrayIcon)
-                    DestroyTrayIcon();
                 //可能是老板键关闭的声音
                 UnMute();
             }
         }
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        static extern IntPtr FindWindowEx(IntPtr parentHandle, IntPtr childAfter, string lclassName, string windowTitle);
-
-        [DllImport("User32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint ID);
     }
 
     [DataContract(Name = "TrayIconKai")]
@@ -339,11 +309,6 @@ namespace TrayIconKai
         [DataMember]
         public bool EnableBossKey { get; set; }
         /// <summary>
-        /// 使用全局老板键
-        /// </summary>
-        [DataMember]
-        public bool GlobalBossKey { get; set; } = true;
-        /// <summary>
         /// 按下老板键时隐藏托盘图标
         /// </summary>
         [DataMember]
@@ -372,19 +337,59 @@ namespace TrayIconKai
         public bool ActivateWhenShow { get; set; }
     }
 
-    internal abstract class HotKeyRegister : IDisposable
+    internal class HotKeyRegister : IMessageFilter, IDisposable
     {
-        public virtual event EventHandler HotKeyPressed;
-        public virtual KeyModifiers Modifiers { get; protected set; }
-        public virtual Keys Key { get; protected set; }
+        private const int WM_HOTKEY = 0x0312;
 
-        public HotKeyRegister(KeyModifiers modifiers, Keys key)
+        public IntPtr Hwnd { get; private set; }
+        public int ID { get; private set; }
+        public KeyModifiers Modifiers { get; protected set; }
+        public Keys Key { get; protected set; }
+
+        public event EventHandler HotKeyPressed;
+
+        public HotKeyRegister(IntPtr hwnd, int id, KeyModifiers modifiers, Keys key)
         {
+            Hwnd = hwnd;
+            ID = id;
             Modifiers = modifiers;
             Key = key;
+            RegisterHotKey();
+
+            Application.AddMessageFilter(this);
         }
 
-        public abstract void Dispose();
+        private void RegisterHotKey()
+        {
+            bool isKeyRegisterd = NativeMethods.RegisterHotKey(Hwnd, ID, Modifiers, Key);
+            if (!isKeyRegisterd)
+            {
+                //热键被占用了！试图解除以前注册的热键！
+                NativeMethods.UnregisterHotKey(IntPtr.Zero, ID);
+                //再试一次！
+                isKeyRegisterd = NativeMethods.RegisterHotKey(Hwnd, ID, Modifiers, Key);
+                if (!isKeyRegisterd)
+                {
+                    //啊！该热键被其他程序占用了！
+                    MessageBox.Show("老板键已被其他程序占用，请检查设置");
+                }
+            }
+        }
+
+        [PermissionSet(SecurityAction.LinkDemand, Name = "FullTrust")]
+        public bool PreFilterMessage(ref Message m)
+        {
+            if (m.Msg == WM_HOTKEY
+                && m.HWnd == Hwnd
+                && m.WParam == (IntPtr)ID
+                && HotKeyPressed != null)
+            {
+                HotKeyPressed(this, EventArgs.Empty);
+                //截断此信息
+                return true;
+            }
+            return false;
+        }
 
         /// <summary>
         /// 获得按下的修饰符和其他键
@@ -426,126 +431,6 @@ namespace TrayIconKai
         {
             return modifiers != KeyModifiers.None && key != Keys.None;
         }
-    }
-
-    internal class LocalHotKeyRegister : HotKeyRegister
-    {
-        /// <summary>
-        /// 记录注册快捷键前的Form.KeyPreview属性的状态，删除快捷键时还原
-        /// </summary>
-        private bool oldKeyPreviewState;
-
-        public override event EventHandler HotKeyPressed;
-
-        public Form Form { get; private set; }
-
-        public LocalHotKeyRegister(Form form, KeyModifiers modifiers, Keys key) : base(modifiers, key)
-        {
-            Form = form;
-            RegisterHotKey();
-        }
-
-        private void RegisterHotKey()
-        {
-            oldKeyPreviewState = Form.KeyPreview;
-            Form.KeyPreview = true;
-            Form.KeyDown += Form_KeyDown;
-        }
-
-        private void Form_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (HotKeyPressed != null && e.Modifiers != Keys.None)
-            {
-                Keys key;
-                KeyModifiers modifiers = GetModifiers(e.KeyData, out key);
-                if ((int)key == (int)Key && (int)modifiers == (int)Modifiers)
-                {
-                    e.Handled = true;
-                    HotKeyPressed(this, EventArgs.Empty);
-                }
-            }
-        }
-
-        #region IDisposable Support
-        private bool disposedValue = false;
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    Form.KeyPreview = oldKeyPreviewState;
-                    Form.KeyDown -= Form_KeyDown;
-                }
-                disposedValue = true;
-            }
-        }
-
-        public override void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-        #endregion
-    }
-
-    internal class GlobalHotKeyRegister : HotKeyRegister, IMessageFilter
-    {
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern bool RegisterHotKey(IntPtr hWnd, int id,
-            KeyModifiers fsModifiers, Keys vk);
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
-
-        private const int WM_HOTKEY = 0x0312;
-
-        public IntPtr Hwnd { get; private set; }
-        public int ID { get; private set; }
-
-        public override event EventHandler HotKeyPressed;
-
-        public GlobalHotKeyRegister(IntPtr hwnd, int id, KeyModifiers modifiers, Keys key) : base(modifiers, key)
-        {
-            Hwnd = hwnd;
-            ID = id;
-            RegisterHotKey();
-
-            Application.AddMessageFilter(this);
-        }
-
-        private void RegisterHotKey()
-        {
-            bool isKeyRegisterd = RegisterHotKey(Hwnd, ID, Modifiers, Key);
-            if (!isKeyRegisterd)
-            {
-                //热键被占用了！试图解除以前注册的热键！
-                UnregisterHotKey(IntPtr.Zero, ID);
-                //再试一次！
-                isKeyRegisterd = RegisterHotKey(Hwnd, ID, Modifiers, Key);
-                if (!isKeyRegisterd)
-                {
-                    //啊！该热键被其他程序占用了！
-                    MessageBox.Show("老板键已被其他程序占用，请检查设置");
-                }
-            }
-        }
-
-        [PermissionSet(SecurityAction.LinkDemand, Name = "FullTrust")]
-        public bool PreFilterMessage(ref Message m)
-        {
-            if (m.Msg == WM_HOTKEY
-                && m.HWnd == Hwnd
-                && m.WParam == (IntPtr)ID
-                && HotKeyPressed != null)
-            {
-                HotKeyPressed(this, EventArgs.Empty);
-                //截断此信息
-                return true;
-            }
-            return false;
-        }
 
         #region IDisposable Support
         private bool disposedValue = false;
@@ -557,13 +442,13 @@ namespace TrayIconKai
                 if (disposing)
                 {
                     Application.RemoveMessageFilter(this);
-                    UnregisterHotKey(Hwnd, ID);
+                    NativeMethods.UnregisterHotKey(Hwnd, ID);
                 }
                 disposedValue = true;
             }
         }
 
-        public override void Dispose()
+        public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);

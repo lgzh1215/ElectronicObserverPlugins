@@ -96,7 +96,6 @@ namespace TrayIconKai
             hideWhenMinimized.Checked = config.HideWhenMinimized;
 
             enableBossKey.Checked = config.EnableBossKey;
-            globalBossKey.Checked = config.GlobalBossKey;
             hideTrayIconWhenBossCome.Checked = config.HideTrayIconWhenBossCome;
             muteWhenBossCome.Checked = config.MuteWhenBossCome;
 
@@ -120,7 +119,6 @@ namespace TrayIconKai
             newConfig.HideWhenMinimized = hideWhenMinimized.Checked;
 
             newConfig.EnableBossKey = enableBossKey.Checked;
-            newConfig.GlobalBossKey = globalBossKey.Checked;
             newConfig.HideTrayIconWhenBossCome = hideTrayIconWhenBossCome.Checked;
             newConfig.MuteWhenBossCome = muteWhenBossCome.Checked;
 

@@ -34,7 +34,6 @@
             this.bossKeyGroupBox = new System.Windows.Forms.GroupBox();
             this.muteWhenBossCome = new System.Windows.Forms.CheckBox();
             this.hideTrayIconWhenBossCome = new System.Windows.Forms.CheckBox();
-            this.globalBossKey = new System.Windows.Forms.CheckBox();
             this.textBox = new System.Windows.Forms.TextBox();
             this.label = new System.Windows.Forms.Label();
             this.enableBossKey = new System.Windows.Forms.CheckBox();
@@ -78,7 +77,7 @@
             // activateWhenShow
             // 
             this.activateWhenShow.AutoSize = true;
-            this.activateWhenShow.Location = new System.Drawing.Point(6, 267);
+            this.activateWhenShow.Location = new System.Drawing.Point(6, 245);
             this.activateWhenShow.Name = "activateWhenShow";
             this.activateWhenShow.Size = new System.Drawing.Size(216, 16);
             this.activateWhenShow.TabIndex = 6;
@@ -90,12 +89,11 @@
             this.bossKeyGroupBox.AutoSize = true;
             this.bossKeyGroupBox.Controls.Add(this.muteWhenBossCome);
             this.bossKeyGroupBox.Controls.Add(this.hideTrayIconWhenBossCome);
-            this.bossKeyGroupBox.Controls.Add(this.globalBossKey);
             this.bossKeyGroupBox.Controls.Add(this.textBox);
             this.bossKeyGroupBox.Controls.Add(this.label);
             this.bossKeyGroupBox.Location = new System.Drawing.Point(6, 134);
             this.bossKeyGroupBox.Name = "bossKeyGroupBox";
-            this.bossKeyGroupBox.Size = new System.Drawing.Size(358, 127);
+            this.bossKeyGroupBox.Size = new System.Drawing.Size(358, 105);
             this.bossKeyGroupBox.TabIndex = 5;
             this.bossKeyGroupBox.TabStop = false;
             this.bossKeyGroupBox.Text = "老板键";
@@ -103,7 +101,7 @@
             // muteWhenBossCome
             // 
             this.muteWhenBossCome.AutoSize = true;
-            this.muteWhenBossCome.Location = new System.Drawing.Point(6, 91);
+            this.muteWhenBossCome.Location = new System.Drawing.Point(6, 69);
             this.muteWhenBossCome.Name = "muteWhenBossCome";
             this.muteWhenBossCome.Size = new System.Drawing.Size(144, 16);
             this.muteWhenBossCome.TabIndex = 4;
@@ -113,22 +111,12 @@
             // hideTrayIconWhenBossCome
             // 
             this.hideTrayIconWhenBossCome.AutoSize = true;
-            this.hideTrayIconWhenBossCome.Location = new System.Drawing.Point(6, 69);
+            this.hideTrayIconWhenBossCome.Location = new System.Drawing.Point(6, 47);
             this.hideTrayIconWhenBossCome.Name = "hideTrayIconWhenBossCome";
             this.hideTrayIconWhenBossCome.Size = new System.Drawing.Size(168, 16);
             this.hideTrayIconWhenBossCome.TabIndex = 3;
             this.hideTrayIconWhenBossCome.Text = "按下老板键时隐藏托盘图标";
             this.hideTrayIconWhenBossCome.UseVisualStyleBackColor = true;
-            // 
-            // globalBossKey
-            // 
-            this.globalBossKey.AutoSize = true;
-            this.globalBossKey.Location = new System.Drawing.Point(6, 47);
-            this.globalBossKey.Name = "globalBossKey";
-            this.globalBossKey.Size = new System.Drawing.Size(108, 16);
-            this.globalBossKey.TabIndex = 2;
-            this.globalBossKey.Text = "使用全局老板键";
-            this.globalBossKey.UseVisualStyleBackColor = true;
             // 
             // textBox
             // 
@@ -232,7 +220,6 @@
         private System.Windows.Forms.GroupBox bossKeyGroupBox;
         private System.Windows.Forms.Label label;
         private System.Windows.Forms.TextBox textBox;
-        private System.Windows.Forms.CheckBox globalBossKey;
         private System.Windows.Forms.CheckBox hideTrayIconWhenBossCome;
         private System.Windows.Forms.CheckBox muteWhenBossCome;
         private System.Windows.Forms.CheckBox activateWhenShow;
