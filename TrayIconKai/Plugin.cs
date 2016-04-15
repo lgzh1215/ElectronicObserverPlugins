@@ -38,12 +38,24 @@ namespace TrayIconKai
 
         public override string Version
         {
-            get { return "1.0.1.0"; }
+            get { return "1.0.1.2"; }
         }
 
         public override PluginSettingControl GetSettings()
         {
             return new Settings(this);
+        }
+
+        public override PluginUpdateInformation UpdateInformation
+        {
+            get
+            {
+                return new PluginUpdateInformation(PluginUpdateInformation.UpdateType.Auto)
+                {
+                    UpdateInformationURI = "http://lgzh1215.github.io/Files/TrayIconKai/UpdateInfo.json",
+                    PluginDownloadURI = "http://lgzh1215.github.io/Files/TrayIconKai/TrayIconKai.zip"
+                };
+            }
         }
 
         public override bool RunService(FormMain main)
