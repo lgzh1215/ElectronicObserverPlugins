@@ -1,12 +1,8 @@
-﻿using BrowserLib;
-using CoreAudioApi;
+﻿using CoreAudioApi;
 using ElectronicObserver.Utility.Storage;
 using ElectronicObserver.Window;
 using ElectronicObserver.Window.Plugins;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 using System.Windows.Forms;
@@ -17,16 +13,23 @@ namespace TrayIconKai
     {
         private readonly string ConfigFile = Application.StartupPath + @"\Settings\TrayIconKai.xml";
 
-        private NotifyIcon notifyIcon;
+        private NotifyIcon trayIcon;
         private FormMain mainForm;
 
+        /// <summary>
+        /// 记录隐藏窗口前是最大化还是通常状态，显示窗口时还原
+        /// </summary>
         private FormWindowState oldWindowState;
+        /// <summary>
+        /// <para>true：插件没有改动音量，或者浏览器本来就是静音</para>
+        /// <para>false：插件将浏览器改成了静音</para>
+        /// </summary>
         private bool oldMuteState = true;
 
         private HotKeyRegister hotKeyToRegister;
         private VolumeManager volumeManager;
 
-        public Config Config { get; private set; }
+        internal Config Config { get; private set; }
 
         public override string MenuTitle
         {
@@ -35,7 +38,7 @@ namespace TrayIconKai
 
         public override string Version
         {
-            get { return "1.0.0.3"; }
+            get { return "1.0.1.2"; }
         }
 
         public override PluginSettingControl GetSettings()
@@ -43,30 +46,69 @@ namespace TrayIconKai
             return new Settings(this);
         }
 
+        public override PluginUpdateInformation UpdateInformation
+        {
+            get
+            {
+                return new PluginUpdateInformation(PluginUpdateInformation.UpdateType.Auto)
+                {
+                    UpdateInformationURI = "http://lgzh1215.github.io/Files/TrayIconKai/UpdateInfo.json",
+                    PluginDownloadURI = "http://lgzh1215.github.io/Files/TrayIconKai/TrayIconKai.zip"
+                };
+            }
+        }
+
         public override bool RunService(FormMain main)
         {
             mainForm = main;
+            oldWindowState = main.WindowState;
 
-            Config config = new Config();
+            //载入配置
+            Config = new Config();
             if (System.IO.File.Exists(ConfigFile))
             {
-                Config loadConfig = (Config)config.Load(ConfigFile);
+                Config loadConfig = (Config)Config.Load(ConfigFile);
                 if (loadConfig != null)
-                    config = loadConfig;
+                    UpdateConfig(loadConfig);
             }
-            UpdateConfig(config);
 
-            // 最小化事件
-            oldWindowState = main.WindowState;
             main.SizeChanged += Main_SizeChanged;
             main.FormClosed += Main_FormClosed;
 
             return true;
         }
 
+        public Config GetConfig()
+        {
+            return new Config
+            {
+                EnableTrayIcon = Config.EnableTrayIcon,
+                HideWhenClickTrayIcon = Config.HideWhenClickTrayIcon,
+                HideWhenMinimized = Config.HideWhenMinimized,
+
+                EnableBossKey = Config.EnableBossKey,
+                HideTrayIconWhenBossCome = Config.HideTrayIconWhenBossCome,
+                MuteWhenBossCome = Config.MuteWhenBossCome,
+
+                RegisterModifiers = Config.RegisterModifiers,
+                RegisterKey = Config.RegisterKey,
+                ActivateWhenShow = Config.ActivateWhenShow,
+            };
+        }
+
         public void UpdateConfig(Config newConfig)
         {
-            Config = newConfig;
+            Config.EnableTrayIcon = newConfig.EnableTrayIcon;
+            Config.HideWhenClickTrayIcon = newConfig.HideWhenClickTrayIcon;
+            Config.HideWhenMinimized = newConfig.HideWhenMinimized;
+
+            Config.EnableBossKey = newConfig.EnableBossKey;
+            Config.HideTrayIconWhenBossCome = newConfig.HideTrayIconWhenBossCome;
+            Config.MuteWhenBossCome = newConfig.MuteWhenBossCome;
+
+            Config.RegisterModifiers = newConfig.RegisterModifiers;
+            Config.RegisterKey = newConfig.RegisterKey;
+            Config.ActivateWhenShow = newConfig.ActivateWhenShow;
 
             if (Config.EnableTrayIcon)
                 CreateTrayIcon();
@@ -84,24 +126,36 @@ namespace TrayIconKai
 
         private void CreateTrayIcon()
         {
-            if (notifyIcon == null)
+            if (trayIcon == null)
             {
-                notifyIcon = new NotifyIcon();
-                notifyIcon.Icon = mainForm.Icon;
-                notifyIcon.Text = mainForm.Text;
-                notifyIcon.Click += NotifyIcon_Click;
-                notifyIcon.Visible = true;
+                trayIcon = new NotifyIcon();
+                trayIcon.Icon = mainForm.Icon;
+                trayIcon.Text = mainForm.Text;
+                trayIcon.Click += NotifyIcon_Click;
+                trayIcon.Visible = true;
             }
         }
 
         private void DestroyTrayIcon()
         {
-            if (notifyIcon != null)
+            if (trayIcon != null)
             {
-                notifyIcon.Visible = false;
-                notifyIcon.Dispose();
-                notifyIcon = null;
+                trayIcon.Visible = false;
+                trayIcon.Dispose();
+                trayIcon = null;
             }
+        }
+
+        private void HideTrayIcon()
+        {
+            if (trayIcon != null)
+                trayIcon.Visible = false;
+        }
+
+        private void ShowTrayIcon()
+        {
+            if (trayIcon != null)
+                trayIcon.Visible = true;
         }
 
         private void RegisterBossKey()
@@ -109,12 +163,8 @@ namespace TrayIconKai
             if (HotKeyRegister.IsCombineKey(Config.RegisterModifiers, Config.RegisterKey))
             {
                 UnregisterBossKey();
-                if (Config.GlobalBossKey)
-                    hotKeyToRegister = new GlobalHotKeyRegister(mainForm.Handle, 100,
-                        Config.RegisterModifiers, Config.RegisterKey);
-                else
-                    hotKeyToRegister = new LocalHotKeyRegister(mainForm,
-                        Config.RegisterModifiers, Config.RegisterKey);
+                hotKeyToRegister = new HotKeyRegister(mainForm.Handle, 100,
+                    Config.RegisterModifiers, Config.RegisterKey);
                 hotKeyToRegister.HotKeyPressed += new EventHandler(BossKeyPressed);
             }
         }
@@ -137,15 +187,21 @@ namespace TrayIconKai
         {
             mainForm.Visible = true;
             mainForm.WindowState = oldWindowState;
+            if (Config.ActivateWhenShow)
+                mainForm.Activate();
         }
 
-        internal VolumeManager GetVolumeManager()
+        private VolumeManager GetVolumeManager()
         {
             if (volumeManager == null)
             {
-                IntPtr browserHwnd = FindWindowEx(mainForm.Browser.Handle, IntPtr.Zero, null, null);
+                //获得浏览器进程的窗口句柄
+                IntPtr browserHwnd = NativeMethods.FindWindowEx(mainForm.Browser.Handle, IntPtr.Zero, null, null);
+                if (browserHwnd == IntPtr.Zero) return null;
+                //获得浏览器进程的PID
                 uint processID;
-                GetWindowThreadProcessId(browserHwnd, out processID);
+                NativeMethods.GetWindowThreadProcessId(browserHwnd, out processID);
+                if (processID == 0U) return null;
                 volumeManager = new VolumeManager(processID);
             }
             return volumeManager;
@@ -162,7 +218,7 @@ namespace TrayIconKai
                     oldMuteState = false;
                 }
             }
-            catch { }   //浏览器已打开但未载入网页
+            catch { }//浏览器已打开但未载入网页
         }
 
         private void UnMute()
@@ -172,24 +228,22 @@ namespace TrayIconKai
                 if (!oldMuteState)
                 {
                     VolumeManager volume = GetVolumeManager();
-                    if (volume.IsMute)
+                    if (volume != null && volume.IsMute)
                         volume.IsMute = false;
                     oldMuteState = true;
                 }
             }
-            catch { }    //浏览器已打开但未载入网页
+            catch { }//浏览器已打开但未载入网页
         }
 
         private void BossKeyPressed(object sender, EventArgs e)
         {
-            bool visible = mainForm.Visible;
-            if (visible)
+            if (mainForm.Visible)
             {
                 //BOSS IS COMING!！!
                 HideWindow();
-                //不使用全局热键时不能隐藏托盘图标
-                if (Config.HideTrayIcon && Config.GlobalBossKey && notifyIcon != null)
-                    notifyIcon.Visible = false;
+                if (Config.HideTrayIconWhenBossCome)
+                    HideTrayIcon();
                 if (Config.MuteWhenBossCome)
                     Mute();
             }
@@ -197,8 +251,7 @@ namespace TrayIconKai
             {
                 //老板吔屎啦！!！
                 ShowWindow();
-                if (notifyIcon != null)
-                    notifyIcon.Visible = true;
+                ShowTrayIcon();
                 UnMute();
             }
         }
@@ -225,107 +278,157 @@ namespace TrayIconKai
 
         private void NotifyIcon_Click(object sender, EventArgs e)
         {
-            if (Config.HideWhenClickTrayIcon)
+            if (mainForm.Visible)
             {
-                if (mainForm.Visible)
+                if (Config.HideWhenClickTrayIcon)
                 {
-                    //点击托盘图标隐藏窗口
                     HideWindow();
                 }
-                else
-                {
-                    //显示由于点击托盘图标隐藏的窗口
-                    ShowWindow();
-                }
             }
-            else if (!mainForm.Visible)
+            else
             {
-                //显示由于最小化或老板键隐藏的窗口
                 ShowWindow();
+                //可能是老板键关闭的声音
                 UnMute();
             }
         }
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        static extern IntPtr FindWindowEx(IntPtr parentHandle, IntPtr childAfter, string lclassName, string windowTitle);
-
-        [DllImport("User32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint ID);
     }
 
     [DataContract(Name = "TrayIconKai")]
     public class Config : DataStorage
     {
-        public override void Initialize()
-        {
-            EnableTrayIcon = true;
-            HideWhenClickTrayIcon = true;
-            GlobalBossKey = true;
-            HideTrayIcon = true;
-            MuteWhenBossCome = true;
-            RegisterKey = Keys.None;
-            RegisterModifiers = KeyModifiers.None;
-        }
+        public override void Initialize() { }
 
+        /// <summary>
+        /// 启用托盘图标
+        /// </summary>
         [DataMember]
-        public bool EnableTrayIcon { get; set; }
+        public bool EnableTrayIcon { get; set; } = true;
+        /// <summary>
+        /// 点击托盘图标时隐藏窗口
+        /// </summary>
         [DataMember]
-        public bool HideWhenClickTrayIcon { get; set; }
+        public bool HideWhenClickTrayIcon { get; set; } = true;
+        /// <summary>
+        /// 最小化时隐藏窗口到托盘
+        /// </summary>
         [DataMember]
         public bool HideWhenMinimized { get; set; }
 
+        /// <summary>
+        /// 启用老板键
+        /// </summary>
         [DataMember]
         public bool EnableBossKey { get; set; }
+        /// <summary>
+        /// 按下老板键时隐藏托盘图标
+        /// </summary>
         [DataMember]
-        public bool GlobalBossKey { get; set; }
+        public bool HideTrayIconWhenBossCome { get; set; } = true;
+        /// <summary>
+        /// 按下老板键时关闭声音
+        /// </summary>
         [DataMember]
-        public bool HideTrayIcon { get; set; }
-        [DataMember]
-        public bool MuteWhenBossCome { get; set; }
+        public bool MuteWhenBossCome { get; set; } = true;
 
+        /// <summary>
+        /// 老板键
+        /// </summary>
         [DataMember]
-        public Keys RegisterKey { get; set; }
+        public Keys RegisterKey { get; set; } = Keys.None;
+        /// <summary>
+        /// 老板键修饰符（Ctrl、Shift、Alt）
+        /// </summary>
         [DataMember]
-        public KeyModifiers RegisterModifiers { get; set; }
+        public KeyModifiers RegisterModifiers { get; set; } = KeyModifiers.None;
+
+        /// <summary>
+        /// 恢复被隐藏的窗口时将其激活
+        /// </summary>
+        [DataMember]
+        public bool ActivateWhenShow { get; set; }
     }
 
-    internal abstract class HotKeyRegister : IDisposable
+    internal class HotKeyRegister : IMessageFilter, IDisposable
     {
-        public virtual event EventHandler HotKeyPressed;
-        public virtual KeyModifiers Modifiers { get; protected set; }
-        public virtual Keys Key { get; protected set; }
+        private const int WM_HOTKEY = 0x0312;
 
-        public HotKeyRegister(KeyModifiers modifiers, Keys key)
+        public IntPtr Hwnd { get; private set; }
+        public int ID { get; private set; }
+        public KeyModifiers Modifiers { get; protected set; }
+        public Keys Key { get; protected set; }
+
+        public event EventHandler HotKeyPressed;
+
+        public HotKeyRegister(IntPtr hwnd, int id, KeyModifiers modifiers, Keys key)
         {
+            Hwnd = hwnd;
+            ID = id;
             Modifiers = modifiers;
             Key = key;
+            RegisterHotKey();
+
+            Application.AddMessageFilter(this);
         }
 
-        public abstract void Dispose();
+        private void RegisterHotKey()
+        {
+            bool isKeyRegisterd = NativeMethods.RegisterHotKey(Hwnd, ID, Modifiers, Key);
+            if (!isKeyRegisterd)
+            {
+                //热键被占用了！试图解除以前注册的热键！
+                NativeMethods.UnregisterHotKey(IntPtr.Zero, ID);
+                //再试一次！
+                isKeyRegisterd = NativeMethods.RegisterHotKey(Hwnd, ID, Modifiers, Key);
+                if (!isKeyRegisterd)
+                {
+                    //啊！该热键被其他程序占用了！
+                    MessageBox.Show("老板键已被其他程序占用，请检查设置");
+                }
+            }
+        }
 
+        [PermissionSet(SecurityAction.LinkDemand, Name = "FullTrust")]
+        public bool PreFilterMessage(ref Message m)
+        {
+            if (m.Msg == WM_HOTKEY
+                && m.HWnd == Hwnd
+                && m.WParam == (IntPtr)ID
+                && HotKeyPressed != null)
+            {
+                HotKeyPressed(this, EventArgs.Empty);
+                //截断此信息
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 获得按下的修饰符和其他键
+        /// </summary>
         public static KeyModifiers GetModifiers(Keys keyData, out Keys key)
         {
             key = keyData;
             KeyModifiers modifers = KeyModifiers.None;
-            // Check whether the keydata contains the CTRL modifier key.
+            //检查是否按下了Ctrl修饰符
             if ((keyData & Keys.Control) == Keys.Control)
             {
                 modifers |= KeyModifiers.Control;
                 key = keyData ^ Keys.Control;
             }
-            // Check whether the keydata contains the SHIFT modifier key.
+            //检查是否按下了Shift修饰符
             if ((keyData & Keys.Shift) == Keys.Shift)
             {
                 modifers |= KeyModifiers.Shift;
                 key = key ^ Keys.Shift;
             }
-            // Check whether the keydata contains the ALT modifier key.
+            //检查是否按下了Alt修饰符
             if ((keyData & Keys.Alt) == Keys.Alt)
             {
                 modifers |= KeyModifiers.Alt;
                 key = key ^ Keys.Alt;
             }
-            // Check whether a key other than SHIFT, CTRL or ALT (Menu) is pressed.
+            //检查是否按下了除了修饰符以外的其他键
             if (key == Keys.ShiftKey || key == Keys.ControlKey || key == Keys.Menu)
             {
                 key = Keys.None;
@@ -340,122 +443,6 @@ namespace TrayIconKai
         {
             return modifiers != KeyModifiers.None && key != Keys.None;
         }
-    }
-
-    internal class LocalHotKeyRegister : HotKeyRegister
-    {
-        private bool oldState;
-
-        public override event EventHandler HotKeyPressed;
-
-        public Form Form { get; private set; }
-
-        public LocalHotKeyRegister(Form form, KeyModifiers modifiers, Keys key) : base(modifiers, key)
-        {
-            Form = form;
-            RegisterHotKey();
-        }
-
-        private void RegisterHotKey()
-        {
-            oldState = Form.KeyPreview;
-            Form.KeyPreview = true;
-            Form.KeyDown += Form_KeyDown;
-        }
-
-        private void Form_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (HotKeyPressed != null && e.Modifiers != Keys.None)
-            {
-                Keys key = Keys.None;
-                KeyModifiers modifiers = GetModifiers(e.KeyData, out key);
-                if ((int)key == (int)Key && (int)modifiers == (int)Modifiers)
-                {
-                    e.Handled = true;
-                    HotKeyPressed(this, EventArgs.Empty);
-                }
-            }
-        }
-
-        #region IDisposable Support
-        private bool disposedValue = false;
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    Form.KeyPreview = oldState;
-                    Form.KeyDown -= Form_KeyDown;
-                }
-                disposedValue = true;
-            }
-        }
-
-        public override void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-        #endregion
-    }
-
-    internal class GlobalHotKeyRegister : HotKeyRegister, IMessageFilter
-    {
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern bool RegisterHotKey(IntPtr hWnd, int id,
-            KeyModifiers fsModifiers, Keys vk);
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
-
-        private const int WM_HOTKEY = 0x0312;
-
-        public IntPtr Handle { get; private set; }
-        public int ID { get; private set; }
-
-        public override event EventHandler HotKeyPressed;
-
-        public GlobalHotKeyRegister(IntPtr handle, int id, KeyModifiers modifiers, Keys key) : base(modifiers, key)
-        {
-            Handle = handle;
-            ID = id;
-            RegisterHotKey();
-
-            Application.AddMessageFilter(this);
-        }
-
-        private void RegisterHotKey()
-        {
-            bool isKeyRegisterd = RegisterHotKey(Handle, ID, Modifiers, Key);
-            if (!isKeyRegisterd)
-            {
-                //热键被占用了！试图解除以前注册的热键！
-                UnregisterHotKey(IntPtr.Zero, ID);
-                //再试一次！
-                isKeyRegisterd = RegisterHotKey(Handle, ID, Modifiers, Key);
-                if (!isKeyRegisterd)
-                {
-                    //啊！该热键被其他程序占用了！
-                    MessageBox.Show("老板键已被其他程序占用，请检查设置");
-                }
-            }
-        }
-
-        [PermissionSet(SecurityAction.LinkDemand, Name = "FullTrust")]
-        public bool PreFilterMessage(ref Message m)
-        {
-            if (m.Msg == WM_HOTKEY
-                && m.HWnd == Handle
-                && m.WParam == (IntPtr)ID
-                && HotKeyPressed != null)
-            {
-                HotKeyPressed(this, EventArgs.Empty);
-                return true;
-            }
-            return false;
-        }
 
         #region IDisposable Support
         private bool disposedValue = false;
@@ -467,13 +454,13 @@ namespace TrayIconKai
                 if (disposing)
                 {
                     Application.RemoveMessageFilter(this);
-                    UnregisterHotKey(Handle, ID);
+                    NativeMethods.UnregisterHotKey(Hwnd, ID);
                 }
                 disposedValue = true;
             }
         }
 
-        public override void Dispose()
+        public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
