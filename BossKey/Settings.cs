@@ -2,12 +2,12 @@
 using System;
 using System.Windows.Forms;
 
-namespace TrayIconKai
+namespace BossKey
 {
     public partial class Settings : PluginSettingControl
     {
-        private TrayIconKai plugin;
-        public Settings(TrayIconKai plugin)
+        private BossKey plugin;
+        public Settings(BossKey plugin)
         {
             this.plugin = plugin;
             InitializeComponent();
@@ -91,18 +91,11 @@ namespace TrayIconKai
         {
             Config config = plugin.Config;
 
-            enableTrayIcon.Checked = config.EnableTrayIcon;
-            hideWhenClickTrayIcon.Checked = config.HideWhenClickTrayIcon;
-            hideWhenMinimized.Checked = config.HideWhenMinimized;
-
             enableBossKey.Checked = config.EnableBossKey;
-            hideTrayIconWhenBossCome.Checked = config.HideTrayIconWhenBossCome;
             muteWhenBossCome.Checked = config.MuteWhenBossCome;
 
             registerKey = config.RegisterKey;
             registerModifiers = config.RegisterModifiers;
-
-            activateWhenShow.Checked = config.ActivateWhenShow;
 
             //显示之前保存的热键！
             if (HotKeyRegister.IsCombineKey(registerModifiers, registerKey))
@@ -114,18 +107,11 @@ namespace TrayIconKai
         {
             Config newConfig = new Config();
 
-            newConfig.EnableTrayIcon = enableTrayIcon.Checked;
-            newConfig.HideWhenClickTrayIcon = hideWhenClickTrayIcon.Checked;
-            newConfig.HideWhenMinimized = hideWhenMinimized.Checked;
-
             newConfig.EnableBossKey = enableBossKey.Checked;
-            newConfig.HideTrayIconWhenBossCome = hideTrayIconWhenBossCome.Checked;
             newConfig.MuteWhenBossCome = muteWhenBossCome.Checked;
 
             newConfig.RegisterKey = registerKey;
             newConfig.RegisterModifiers = registerModifiers;
-
-            newConfig.ActivateWhenShow = activateWhenShow.Checked;
 
             plugin.UpdateConfig(newConfig);
             plugin.SaveConfig();
