@@ -9,7 +9,7 @@ using System.Windows.Forms;
 
 namespace TrayIconKai
 {
-    public class Plugin : ServerPlugin
+    public class TrayIconKai : ServerPlugin
     {
         private readonly string ConfigFile = Application.StartupPath + @"\Settings\TrayIconKai.xml";
 
@@ -31,20 +31,11 @@ namespace TrayIconKai
 
         internal Config Config { get; private set; }
 
-        public override string MenuTitle
-        {
-            get { return "托盘图标改"; }
-        }
+        public override string MenuTitle { get { return "托盘图标改"; } }
 
-        public override string Version
-        {
-            get { return "1.0.1.2"; }
-        }
+        public override string Version { get { return "1.0.1.2"; } }
 
-        public override PluginSettingControl GetSettings()
-        {
-            return new Settings(this);
-        }
+        public override PluginSettingControl GetSettings() { return new Settings(this); }
 
         public override PluginUpdateInformation UpdateInformation
         {
@@ -69,8 +60,9 @@ namespace TrayIconKai
             {
                 Config loadConfig = (Config)Config.Load(ConfigFile);
                 if (loadConfig != null)
-                    UpdateConfig(loadConfig);
+                    Config = loadConfig;
             }
+            ApplyConfig();
 
             main.SizeChanged += Main_SizeChanged;
             main.FormClosed += Main_FormClosed;
@@ -110,6 +102,11 @@ namespace TrayIconKai
             Config.RegisterKey = newConfig.RegisterKey;
             Config.ActivateWhenShow = newConfig.ActivateWhenShow;
 
+            ApplyConfig();
+        }
+
+        public void ApplyConfig()
+        {
             if (Config.EnableTrayIcon)
                 CreateTrayIcon();
             else DestroyTrayIcon();
@@ -249,6 +246,12 @@ namespace TrayIconKai
             }
             else
             {
+                if (Config.HideTrayIconWhenBossCome && trayIcon != null && trayIcon.Visible)
+                {
+                    //BOSS IS COMING!！!
+                    HideTrayIcon();
+                    return;
+                }
                 //老板吔屎啦！!！
                 ShowWindow();
                 ShowTrayIcon();
