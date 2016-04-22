@@ -15,6 +15,7 @@ namespace BossKey
 
         private FormMain formMain;
 
+        private bool init = true;
         /// <summary>
         /// 记录隐藏窗口前是最大化还是通常状态，显示窗口时还原
         /// </summary>
@@ -34,7 +35,12 @@ namespace BossKey
 
         public override string Version { get { return "1.0.0.0"; } }
 
-        public override PluginSettingControl GetSettings() { return new Settings(this); }
+        public override PluginSettingControl GetSettings()
+        {
+            if (init)
+                return new Settings(this);
+            else return null;
+        }
 
         public override PluginUpdateInformation UpdateInformation
         {
@@ -51,8 +57,13 @@ namespace BossKey
         public override bool RunService(FormMain main)
         {
             foreach (var plugin in main.Plugins)
+            {
                 if (plugin.ToString().StartsWith("TrayIconKai"))
+                {
+                    init = false;
                     return false;
+                }
+            }
 
             formMain = main;
 
@@ -134,7 +145,7 @@ namespace BossKey
         {
             formMain.Visible = true;
             formMain.WindowState = oldWindowState;
-                formMain.Activate();
+            formMain.Activate();
         }
 
         private VolumeManager GetVolumeManager()
