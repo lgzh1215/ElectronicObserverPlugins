@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Drawing;
 using System.Windows.Forms;
 
 namespace ManualCounter
@@ -11,9 +10,9 @@ namespace ManualCounter
         public DialogEdit(Counter counter, string title = "添加")
         {
             this.counter = counter;
-            Text = title;
-
             InitializeComponent();
+            Text = title;
+            Font = ElectronicObserver.Utility.Configuration.Config.UI.MainFont;
 
             resetFrequency.Items.Add(new FrequencyObject(Frequency.None));
             resetFrequency.Items.Add(new FrequencyObject(Frequency.Day));

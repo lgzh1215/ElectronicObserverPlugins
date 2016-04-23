@@ -1,15 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using ElectronicObserver.Utility.Storage;
 using ElectronicObserver.Window.Plugins;
-using ElectronicObserver.Window;
-using System.Xml.Serialization;
-using System.Runtime.Serialization;
-using ElectronicObserver.Utility.Storage;
+using System;
+using System.Collections.Generic;
 using System.Drawing;
-using System.Windows.Forms;
 using System.IO;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.Text;
+using System.Windows.Forms;
 
 namespace ManualCounter
 {
@@ -53,92 +51,16 @@ namespace ManualCounter
             Config.Save(ConfigFile);
         }
 
-        static ManualCounter() { Load(); }
-    }
+        public static bool IsLoaded { get; set; } = false;
 
-    public class CounterHolder
-    {
-        private readonly static CounterHolder instance = new CounterHolder();
-        public static CounterHolder Instance { get { return instance; } }
-
-        private CounterHolder()
-        {
-            FrequencyName = new Dictionary<Frequency, string>();
-            FrequencyName.Add(Frequency.None, "无");
-            FrequencyName.Add(Frequency.Day, "每日");
-            FrequencyName.Add(Frequency.Week, "每周");
-            FrequencyName.Add(Frequency.Month, "每月");
-            FrequencyName.Add(Frequency.Year, "每年");
-        }
-
-        public List<Counter> Counters
-        {
-            get { return ManualCounter.Config.Counters; }
-            private set
-            {
-                if (value != null)
-                    ManualCounter.Config.Counters = value;
-            }
-        }
-
-        public void AddCounter(Counter c)
-        {
-            Counters.Add(c);
-        }
-
-        public void RemoveCounter(Counter c)
-        {
-            Counters.Remove(c);
-        }
-
-        /// <summary>
-        /// 重置需要重置的计数器
-        /// </summary>
-        public void UpdateCounter()
-        {
-            DateTime now = DateTime.Now;
-            foreach (Counter c in Counters)
-            {
-                if (c == null || c.ResetFrequency == Frequency.None) continue;
-                switch (c.ResetFrequency)
-                {
-                    case Frequency.Day:
-                        if (now - c.ResetDate >= TimeSpan.FromDays(1))
-                            c.Reset();
-                        break;
-                    case Frequency.Week:
-                        if (now - c.ResetDate >= TimeSpan.FromDays(7))
-                            c.Reset();
-                        break;
-                    case Frequency.Month:
-                        if (now - c.ResetDate >= TimeSpan.FromDays(DateTime.DaysInMonth(c.ResetDate.Year, c.ResetDate.Month)))
-                            c.Reset();
-                        break;
-                    case Frequency.Year:
-                        if (now - c.ResetDate >= TimeSpan.FromDays(DateTime.IsLeapYear(c.ResetDate.Year) ? 366 : 365))
-                            c.Reset();
-                        break;
-                }
-            }
-        }
-
-        public Dictionary<Frequency, string> FrequencyName { get; private set; }
+        static ManualCounter() { Load(); IsLoaded = true; }
     }
 
     public class Counter
     {
         public Counter() { setResetDate(); }
 
-        private string content = "";
-        public string Content
-        {
-            get { return content; }
-            set
-            {
-                if (content != value)
-                    content = value;
-            }
-        }
+        public string Content { get; set; } = "";
 
         private Frequency resetFrequency = Frequency.None;
         public Frequency ResetFrequency
@@ -154,40 +76,11 @@ namespace ManualCounter
             }
         }
 
-        private uint currentValue = 0;
-        public uint CurrentValue
-        {
-            get { return currentValue; }
-            set
-            {
-                if (currentValue != value && currentValue >= 0)
-                    currentValue = value;
-            }
-        }
+        public uint CurrentValue { get; set; } = 0;
 
-        private uint totalValue = 0;
-        public uint TotalValue
-        {
-            get { return totalValue; }
-            set
-            {
-                if (totalValue != value && totalValue >= 0)
-                {
-                    totalValue = value;
-                }
-            }
-        }
+        public uint TotalValue { get; set; } = 0;
 
-        private DateTime resetDate = DateTime.Now;
-        public DateTime ResetDate
-        {
-            get { return resetDate; }
-            set
-            {
-                if (resetDate != value)
-                    resetDate = value;
-            }
-        }
+        public DateTime ResetDate { get; set; } = DateTime.Now;
 
         public bool ResetAlongWithQuests { get; set; } = false;
 
@@ -195,33 +88,32 @@ namespace ManualCounter
 
         public double Progress
         {
-            get { return totalValue == 0 ? 0 : currentValue * 1.0 / totalValue; }
+            get { return TotalValue == 0 ? 0 : CurrentValue * 1.0 / TotalValue; }
         }
 
         public string ProgressText
         {
             get
             {
-                string progressText = string.Format("{0} / {1}", currentValue, totalValue == 0 ? "∞" : totalValue.ToString());
-                if (totalValue > 0)
+                string progressText = string.Format("{0:N0} / {1}", CurrentValue, TotalValue == 0 ? "∞" : TotalValue.ToString("N0"));
+                if (TotalValue > 0)
                 {
-                    string percentText = ", " + string.Format("{0:P}", Progress);
+                    string percentText = "    " + string.Format("{0:P}", Progress);
                     progressText += percentText;
                 }
                 return progressText;
             }
-
         }
 
         public void Increase(bool autoReset = false)
         {
-            if (totalValue == 0)
+            if (TotalValue == 0)
             {
                 CurrentValue++;
             }
             else
             {
-                if (currentValue >= totalValue)
+                if (CurrentValue >= TotalValue)
                 {
                     if (autoReset)
                     {
@@ -248,6 +140,7 @@ namespace ManualCounter
 
         private void setResetDate()
         {
+            if (!ManualCounter.IsLoaded) return;
             DateTime now = DateTime.Now;
             switch (resetFrequency)
             {
@@ -299,6 +192,96 @@ namespace ManualCounter
                     return 7; //就是因为这货才搞的这么复杂！
             }
         }
+    }
+
+    public class CounterHolder
+    {
+        private readonly static CounterHolder instance = new CounterHolder();
+        public static CounterHolder Instance { get { return instance; } }
+
+        private CounterHolder()
+        {
+            FrequencyName = new Dictionary<Frequency, string>();
+            FrequencyName.Add(Frequency.None, "无");
+            FrequencyName.Add(Frequency.Day, "每日");
+            FrequencyName.Add(Frequency.Week, "每周");
+            FrequencyName.Add(Frequency.Month, "每月");
+            FrequencyName.Add(Frequency.Year, "每年");
+        }
+
+        public List<Counter> Counters
+        {
+            get { return ManualCounter.Config.Counters; }
+            private set { ManualCounter.Config.Counters = value; }
+        }
+
+        public void AddCounter(Counter c)
+        {
+            Counters.Add(c);
+        }
+
+        public void RemoveCounter(Counter c)
+        {
+            Counters.Remove(c);
+        }
+
+        /// <summary>
+        /// 重置计数器
+        /// </summary>
+        public void UpdateCounter()
+        {
+            DateTime now = DateTime.Now;
+            foreach (Counter c in Counters)
+            {
+                if (c == null || c.ResetFrequency == Frequency.None) continue;
+                switch (c.ResetFrequency)
+                {
+                    case Frequency.Day:
+                        if (now - c.ResetDate >= TimeSpan.FromDays(1))
+                            c.Reset();
+                        break;
+                    case Frequency.Week:
+                        if (now - c.ResetDate >= TimeSpan.FromDays(7))
+                            c.Reset();
+                        break;
+                    case Frequency.Month:
+                        if (now - c.ResetDate >= TimeSpan.FromDays(DateTime.DaysInMonth(c.ResetDate.Year, c.ResetDate.Month)))
+                            c.Reset();
+                        break;
+                    case Frequency.Year:
+                        if (now - c.ResetDate >= TimeSpan.FromDays(DateTime.IsLeapYear(c.ResetDate.Year) ? 366 : 365))
+                            c.Reset();
+                        break;
+                }
+            }
+        }
+
+        public void UpdateCounter(Counter c)
+        {
+            DateTime now = DateTime.Now;
+            if (c == null || c.ResetFrequency == Frequency.None) return;
+            switch (c.ResetFrequency)
+            {
+                case Frequency.Day:
+                    if (now - c.ResetDate >= TimeSpan.FromDays(1))
+                        c.Reset();
+                    break;
+                case Frequency.Week:
+                    if (now - c.ResetDate >= TimeSpan.FromDays(7))
+                        c.Reset();
+                    break;
+                case Frequency.Month:
+                    if (now - c.ResetDate >= TimeSpan.FromDays(DateTime.DaysInMonth(c.ResetDate.Year, c.ResetDate.Month)))
+                        c.Reset();
+                    break;
+                case Frequency.Year:
+                    if (now - c.ResetDate >= TimeSpan.FromDays(DateTime.IsLeapYear(c.ResetDate.Year) ? 366 : 365))
+                        c.Reset();
+                    break;
+            }
+        }
+
+        public Dictionary<Frequency, string> FrequencyName { get; private set; }
     }
 
     public enum Frequency { None, Day, Week, Month, Year }

@@ -13,7 +13,6 @@ namespace ManualCounter
 {
     public partial class FormCounter : DockContent
     {
-        private DataGridViewCellStyle leftCellStyle, middleCellStyle;
         private bool IsLoaded = false;
 
         private CounterHolder CounterHolder { get { return CounterHolder.Instance; } }
@@ -24,9 +23,13 @@ namespace ManualCounter
 
             this.SuspendLayoutForDpiScale();
             InitializeComponent();
+            Font = Configuration.Config.UI.MainFont;
             ControlHelper.SetDoubleBuffered(counterView);
 
             #region 设置表格样式
+            counterView.Font = Configuration.Config.UI.MainFont;
+
+            DataGridViewCellStyle leftCellStyle; //左对齐
             leftCellStyle = new DataGridViewCellStyle();
             leftCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
             leftCellStyle.BackColor =
@@ -35,6 +38,7 @@ namespace ManualCounter
             leftCellStyle.SelectionForeColor = Configuration.Config.UI.ForeColor;
             leftCellStyle.WrapMode = DataGridViewTriState.False;
 
+            DataGridViewCellStyle middleCellStyle; //中间对齐
             middleCellStyle = new DataGridViewCellStyle(leftCellStyle);
             middleCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
 
@@ -43,6 +47,17 @@ namespace ManualCounter
             columnContent.DefaultCellStyle = leftCellStyle;
             columnProgress.DefaultCellStyle = leftCellStyle;
             counterView.ColumnHeadersHeight = this.GetDpiHeight(24);
+
+            //兼容暗色套
+            if (Configuration.Config.UI.ThemeID == 1)
+            {
+                counterView.EnableHeadersVisualStyles = false;
+                counterView.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
+                //DataGridViewCellStyle dark = new DataGridViewCellStyle(leftCellStyle);
+                //dark.BackColor = dark.SelectionBackColor = Color.FromArgb(45, 45, 48);
+                counterView.ColumnHeadersDefaultCellStyle = leftCellStyle;
+                counterView.BackgroundColor = Configuration.Config.UI.BackColor;
+            }
 
             counterView.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             #endregion
@@ -141,6 +156,7 @@ namespace ManualCounter
             row.SetValues(null, null, null, null);
 
             Counter c = (Counter)row.Tag;
+            CounterHolder.UpdateCounter(c);
             if (c != null)
             {
                 row.SetValues(
