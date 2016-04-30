@@ -220,6 +220,7 @@
             this.progressColor.BackColor = System.Drawing.SystemColors.Control;
             this.tableLayoutPanel2.SetColumnSpan(this.progressColor, 2);
             this.progressColor.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.progressColor.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.progressColor.Location = new System.Drawing.Point(3, 110);
             this.progressColor.MinimumSize = new System.Drawing.Size(190, 23);
             this.progressColor.Name = "progressColor";

@@ -28,36 +28,32 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.Windows.Forms.TableLayoutPanel tableLayoutPanel;
             this.tabControl = new System.Windows.Forms.TabControl();
             this.tabPage = new System.Windows.Forms.TabPage();
             this.muteWhenBossCome = new System.Windows.Forms.CheckBox();
             this.textBox = new System.Windows.Forms.TextBox();
             this.enableBossKey = new System.Windows.Forms.CheckBox();
+            tableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             this.tabControl.SuspendLayout();
             this.tabPage.SuspendLayout();
+            tableLayoutPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // tabControl
             // 
-            this.tabControl.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
             this.tabControl.Controls.Add(this.tabPage);
             this.tabControl.Location = new System.Drawing.Point(0, 0);
             this.tabControl.Name = "tabControl";
             this.tabControl.SelectedIndex = 0;
-            this.tabControl.Size = new System.Drawing.Size(378, 371);
             this.tabControl.TabIndex = 0;
             // 
             // tabPage
             // 
-            this.tabPage.Controls.Add(this.muteWhenBossCome);
-            this.tabPage.Controls.Add(this.textBox);
-            this.tabPage.Controls.Add(this.enableBossKey);
+            this.tabPage.Controls.Add(tableLayoutPanel);
             this.tabPage.Location = new System.Drawing.Point(4, 22);
             this.tabPage.Name = "tabPage";
             this.tabPage.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage.Size = new System.Drawing.Size(370, 345);
             this.tabPage.TabIndex = 0;
             this.tabPage.Text = "老板键";
             this.tabPage.UseVisualStyleBackColor = true;
@@ -65,9 +61,11 @@
             // muteWhenBossCome
             // 
             this.muteWhenBossCome.AutoSize = true;
-            this.muteWhenBossCome.Location = new System.Drawing.Point(6, 33);
+            tableLayoutPanel.SetColumnSpan(this.muteWhenBossCome, 2);
+            this.muteWhenBossCome.Dock = System.Windows.Forms.DockStyle.Top;
+            this.muteWhenBossCome.Location = new System.Drawing.Point(3, 30);
             this.muteWhenBossCome.Name = "muteWhenBossCome";
-            this.muteWhenBossCome.Size = new System.Drawing.Size(144, 16);
+            this.muteWhenBossCome.Size = new System.Drawing.Size(358, 16);
             this.muteWhenBossCome.TabIndex = 4;
             this.muteWhenBossCome.Text = "按下老板键时关闭声音";
             this.muteWhenBossCome.UseVisualStyleBackColor = true;
@@ -75,7 +73,8 @@
             // textBox
             // 
             this.textBox.Cursor = System.Windows.Forms.Cursors.Arrow;
-            this.textBox.Location = new System.Drawing.Point(96, 6);
+            this.textBox.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.textBox.Location = new System.Drawing.Point(93, 3);
             this.textBox.Name = "textBox";
             this.textBox.Size = new System.Drawing.Size(268, 21);
             this.textBox.TabIndex = 1;
@@ -84,24 +83,46 @@
             // enableBossKey
             // 
             this.enableBossKey.AutoSize = true;
-            this.enableBossKey.Location = new System.Drawing.Point(6, 8);
+            this.enableBossKey.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.enableBossKey.Location = new System.Drawing.Point(3, 3);
             this.enableBossKey.Name = "enableBossKey";
-            this.enableBossKey.Size = new System.Drawing.Size(84, 16);
+            this.enableBossKey.Size = new System.Drawing.Size(84, 21);
             this.enableBossKey.TabIndex = 4;
             this.enableBossKey.Text = "启用老板键";
             this.enableBossKey.UseVisualStyleBackColor = true;
+            // 
+            // tableLayoutPanel
+            // 
+            tableLayoutPanel.AutoSize = true;
+            tableLayoutPanel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            tableLayoutPanel.ColumnCount = 2;
+            tableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
+            tableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            tableLayoutPanel.Controls.Add(this.enableBossKey, 0, 0);
+            tableLayoutPanel.Controls.Add(this.muteWhenBossCome, 0, 1);
+            tableLayoutPanel.Controls.Add(this.textBox, 1, 0);
+            tableLayoutPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            tableLayoutPanel.Location = new System.Drawing.Point(3, 3);
+            tableLayoutPanel.Name = "tableLayoutPanel";
+            tableLayoutPanel.RowCount = 2;
+            tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            tableLayoutPanel.TabIndex = 5;
             // 
             // Settings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoSize = true;
+            this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.Controls.Add(this.tabControl);
             this.Name = "Settings";
-            this.Size = new System.Drawing.Size(378, 371);
             this.Load += new System.EventHandler(this.Settings_Load);
             this.tabControl.ResumeLayout(false);
             this.tabPage.ResumeLayout(false);
             this.tabPage.PerformLayout();
+            tableLayoutPanel.ResumeLayout(false);
+            tableLayoutPanel.PerformLayout();
             this.ResumeLayout(false);
 
         }

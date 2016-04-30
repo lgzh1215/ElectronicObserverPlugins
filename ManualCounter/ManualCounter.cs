@@ -43,6 +43,7 @@ namespace ManualCounter
             {
                 Config load = (Config)Config.Load(ConfigFile);
                 if (load != null) Config = load;
+                else return;
             }
         }
 
