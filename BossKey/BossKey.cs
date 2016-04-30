@@ -232,7 +232,12 @@ namespace BossKey
     [DataContract(Name = "BossKey")]
     public class Config : DataStorage
     {
-        public override void Initialize() { }
+        public override void Initialize() {
+            EnableBossKey = false;
+            MuteWhenBossCome = true;
+            RegisterKey = Keys.None;
+            RegisterModifiers = KeyModifiers.None;
+        }
 
         /// <summary>
         /// 启用老板键
@@ -243,18 +248,18 @@ namespace BossKey
         /// 按下老板键时关闭声音
         /// </summary>
         [DataMember]
-        public bool MuteWhenBossCome { get; set; } = true;
+        public bool MuteWhenBossCome { get; set; }
 
         /// <summary>
         /// 老板键
         /// </summary>
         [DataMember]
-        public Keys RegisterKey { get; set; } = Keys.None;
+        public Keys RegisterKey { get; set; }
         /// <summary>
         /// 老板键修饰符（Ctrl、Shift、Alt）
         /// </summary>
         [DataMember]
-        public KeyModifiers RegisterModifiers { get; set; } = KeyModifiers.None;
+        public KeyModifiers RegisterModifiers { get; set; }
     }
 
     internal class HotKeyRegister : IMessageFilter, IDisposable

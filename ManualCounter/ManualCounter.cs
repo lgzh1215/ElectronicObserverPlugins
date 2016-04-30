@@ -290,18 +290,20 @@ namespace ManualCounter
     [DataContract(Name = "ManualCounter")]
     public class Config : DataStorage
     {
-        public override void Initialize() { }
+        public override void Initialize()
+        {
+            Counters = new List<Counter>();
+            ColumnWidth = new List<int>();
+            DefaultColor = Color.FromArgb(0x66, 0xCC, 0xFF);
+        }
 
         [DataMember]
-        public List<Counter> Counters { get; set; } = new List<Counter>();
+        public List<Counter> Counters { get; set; }
 
         [DataMember]
-        public List<int> ColumnWidth { get; set; } = new List<int>();
+        public List<int> ColumnWidth { get; set; }
 
-        /// <summary>
-        /// 天依蓝哟，天依蓝你怕不怕！
-        /// </summary>
         [DataMember]
-        public Color DefaultColor { get; set; } = Color.FromArgb(0x66, 0xCC, 0xFF);
+        public Color DefaultColor { get; set; }
     }
 }

@@ -300,18 +300,31 @@ namespace TrayIconKai
     [DataContract(Name = "TrayIconKai")]
     public class Config : DataStorage
     {
-        public override void Initialize() { }
+        public override void Initialize()
+        {
+            EnableTrayIcon = true;
+            HideWhenClickTrayIcon = true;
+            HideWhenMinimized = false;
+
+            EnableBossKey = false;
+            HideTrayIconWhenBossCome = true;
+            MuteWhenBossCome = true;
+
+            RegisterKey = Keys.None;
+            RegisterModifiers = KeyModifiers.None;
+            ActivateWhenShow = false;
+        }
 
         /// <summary>
         /// 启用托盘图标
         /// </summary>
         [DataMember]
-        public bool EnableTrayIcon { get; set; } = true;
+        public bool EnableTrayIcon { get; set; }
         /// <summary>
         /// 点击托盘图标时隐藏窗口
         /// </summary>
         [DataMember]
-        public bool HideWhenClickTrayIcon { get; set; } = true;
+        public bool HideWhenClickTrayIcon { get; set; }
         /// <summary>
         /// 最小化时隐藏窗口到托盘
         /// </summary>
@@ -327,23 +340,23 @@ namespace TrayIconKai
         /// 按下老板键时隐藏托盘图标
         /// </summary>
         [DataMember]
-        public bool HideTrayIconWhenBossCome { get; set; } = true;
+        public bool HideTrayIconWhenBossCome { get; set; }
         /// <summary>
         /// 按下老板键时关闭声音
         /// </summary>
         [DataMember]
-        public bool MuteWhenBossCome { get; set; } = true;
+        public bool MuteWhenBossCome { get; set; }
 
         /// <summary>
         /// 老板键
         /// </summary>
         [DataMember]
-        public Keys RegisterKey { get; set; } = Keys.None;
+        public Keys RegisterKey { get; set; }
         /// <summary>
         /// 老板键修饰符（Ctrl、Shift、Alt）
         /// </summary>
         [DataMember]
-        public KeyModifiers RegisterModifiers { get; set; } = KeyModifiers.None;
+        public KeyModifiers RegisterModifiers { get; set; }
 
         /// <summary>
         /// 恢复被隐藏的窗口时将其激活
