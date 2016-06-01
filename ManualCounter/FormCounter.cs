@@ -73,11 +73,12 @@ namespace ManualCounter
             List<int> width = ManualCounter.Config.ColumnWidth;
             DataGridViewColumnCollection columns = counterView.Columns;
             if (columns.Count <= width.Count)
+            {
                 for (int i = 0; i < columns.Count; i++)
                 {
                     columns[i].Width = width[i];
                 }
-
+            }
             UpdateView();
             IsLoaded = true;
         }
@@ -99,6 +100,7 @@ namespace ManualCounter
             int index = CounterHolder.Counters.IndexOf(c);
             if (index <= 0) return;
             CounterHolder.Counters.Reverse(index - 1, 2);
+            UpdateView();
         }
 
         internal void MoveDown(Counter c)
@@ -106,6 +108,7 @@ namespace ManualCounter
             int index = CounterHolder.Counters.IndexOf(c);
             if (index < 0 || index == CounterHolder.Counters.Count - 1) return;
             CounterHolder.Counters.Reverse(index, 2);
+            UpdateView();
         }
 
         /// <summary>
@@ -127,12 +130,8 @@ namespace ManualCounter
                     CounterHolder.FrequencyName[c.ResetFrequency],
                     c.Content,
                     c.ProgressText,
-                    c.TotalValue == 0 || c.CurrentValue < c.TotalValue ? "+1" : "RE"
+                    c.ButtonText
                 );
-                //newRow.Cells[columnFrequency.Index].Value = CounterHolder.FrequencyName[c.ResetFrequency];
-                //newRow.Cells[columnContent.Index].Value = c.Content;
-                //newRow.Cells[columnProgress.Index].Value = c.ProgressText;
-                //newRow.Cells[columnIncrease.Index].Value = c.TotalValue == 0 || c.CurrentValue < c.TotalValue ? "+1" : "RE";
                 counterView.Rows.Add(newRow);
             }
 
@@ -163,7 +162,7 @@ namespace ManualCounter
                     CounterHolder.FrequencyName[c.ResetFrequency],
                     c.Content,
                     c.ProgressText,
-                    c.TotalValue == 0 || c.CurrentValue < c.TotalValue ? "+1" : "RE"
+                    c.ButtonText
                 );
             }
             counterView.ResumeLayout();
@@ -224,7 +223,9 @@ namespace ManualCounter
                     DialogEdit edit = new DialogEdit(newCounter);
                     DialogResult result = edit.ShowDialog();
                     if (result == DialogResult.OK)
+                    {
                         AddCounter(newCounter);
+                    }
                 }
                 else
                 {
@@ -268,7 +269,7 @@ namespace ManualCounter
                     content = content.Substring(0, 4) + "…";
                 else if (string.IsNullOrWhiteSpace(c.Content))
                     content = "空白";
-                menuItemIncrease.Text = "「" + content + "」+1";
+                menuItemIncrease.Text = "「" + content + "」+"+ c.Incrementation;
                 menuItemIncrease.Visible = true;
                 toolStripSeparator.Visible = true;
             }
@@ -302,6 +303,7 @@ namespace ManualCounter
                 if (result == DialogResult.OK)
                 {
                     UpdateRow(row);
+                    ManualCounter.Save();
                 }
             }
         }
@@ -316,6 +318,7 @@ namespace ManualCounter
             {
                 ((Counter)row.Tag).Reset();
                 UpdateRow(row);
+                ManualCounter.Save();
             }
         }
 
@@ -329,7 +332,7 @@ namespace ManualCounter
             if (index > -1 && index < counterView.Rows.Count - 1)
             {
                 RemoveCounter((Counter)row.Tag);
-                UpdateView();
+                ManualCounter.Save();
             }
         }
 
@@ -342,7 +345,7 @@ namespace ManualCounter
             if (row != null)
             {
                 MoveUp((Counter)row.Tag);
-                UpdateView();
+                ManualCounter.Save();
             }
         }
 
@@ -355,7 +358,7 @@ namespace ManualCounter
             if (row != null)
             {
                 MoveDown((Counter)row.Tag);
-                UpdateView();
+                ManualCounter.Save();
             }
         }
 

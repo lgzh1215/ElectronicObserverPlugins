@@ -24,6 +24,7 @@ namespace ManualCounter
             resetFrequency.SelectedIndex = (int)counter.ResetFrequency;
             currentValue.Value = counter.CurrentValue;
             totalValue.Value = counter.TotalValue;
+            incrementation.Value = counter.Incrementation;
             resetAlongWithQuests.Checked = counter.ResetAlongWithQuests;
             progressColor.SelectedColor = counter.ProgressColor;
         }
@@ -34,6 +35,7 @@ namespace ManualCounter
             counter.ResetFrequency = ((FrequencyObject)resetFrequency.SelectedItem).frequency;
             counter.CurrentValue = (uint)currentValue.Value;
             counter.TotalValue = (uint)totalValue.Value;
+            counter.Incrementation = (uint)incrementation.Value;
             counter.ResetAlongWithQuests = resetAlongWithQuests.Checked;
             counter.ProgressColor = progressColor.SelectedColor;
 

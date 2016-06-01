@@ -32,6 +32,7 @@
             System.Windows.Forms.Label label2;
             System.Windows.Forms.Label label3;
             System.Windows.Forms.Label label4;
+            System.Windows.Forms.Label label5;
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.acceptButton = new System.Windows.Forms.Button();
             this.cancelButton = new System.Windows.Forms.Button();
@@ -42,14 +43,17 @@
             this.totalValue = new System.Windows.Forms.NumericUpDown();
             this.progressColor = new ElectronicObserver.Window.Control.ColorPicker();
             this.resetAlongWithQuests = new System.Windows.Forms.CheckBox();
+            this.incrementation = new System.Windows.Forms.NumericUpDown();
             label1 = new System.Windows.Forms.Label();
             label2 = new System.Windows.Forms.Label();
             label3 = new System.Windows.Forms.Label();
             label4 = new System.Windows.Forms.Label();
+            label5 = new System.Windows.Forms.Label();
             this.tableLayoutPanel1.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.currentValue)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.totalValue)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.incrementation)).BeginInit();
             this.SuspendLayout();
             // 
             // label1
@@ -110,7 +114,7 @@
             this.tableLayoutPanel1.Controls.Add(this.acceptButton, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.cancelButton, 1, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(3, 163);
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(3, 190);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 1;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
@@ -155,19 +159,22 @@
             this.tableLayoutPanel2.Controls.Add(label4, 0, 3);
             this.tableLayoutPanel2.Controls.Add(this.currentValue, 1, 2);
             this.tableLayoutPanel2.Controls.Add(this.totalValue, 1, 3);
-            this.tableLayoutPanel2.Controls.Add(this.progressColor, 0, 4);
-            this.tableLayoutPanel2.Controls.Add(this.resetAlongWithQuests, 0, 5);
+            this.tableLayoutPanel2.Controls.Add(this.progressColor, 0, 5);
+            this.tableLayoutPanel2.Controls.Add(this.resetAlongWithQuests, 0, 6);
+            this.tableLayoutPanel2.Controls.Add(label5, 0, 4);
+            this.tableLayoutPanel2.Controls.Add(this.incrementation, 1, 4);
             this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel2.Location = new System.Drawing.Point(3, 3);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
-            this.tableLayoutPanel2.RowCount = 6;
+            this.tableLayoutPanel2.RowCount = 7;
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel2.Size = new System.Drawing.Size(286, 160);
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel2.Size = new System.Drawing.Size(286, 187);
             this.tableLayoutPanel2.TabIndex = 1;
             // 
             // resetFrequency
@@ -220,8 +227,7 @@
             this.progressColor.BackColor = System.Drawing.SystemColors.Control;
             this.tableLayoutPanel2.SetColumnSpan(this.progressColor, 2);
             this.progressColor.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.progressColor.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.progressColor.Location = new System.Drawing.Point(3, 110);
+            this.progressColor.Location = new System.Drawing.Point(3, 137);
             this.progressColor.MinimumSize = new System.Drawing.Size(190, 23);
             this.progressColor.Name = "progressColor";
             this.progressColor.Size = new System.Drawing.Size(280, 23);
@@ -233,12 +239,38 @@
             this.resetAlongWithQuests.AutoSize = true;
             this.tableLayoutPanel2.SetColumnSpan(this.resetAlongWithQuests, 2);
             this.resetAlongWithQuests.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.resetAlongWithQuests.Location = new System.Drawing.Point(3, 139);
+            this.resetAlongWithQuests.Location = new System.Drawing.Point(3, 166);
             this.resetAlongWithQuests.Name = "resetAlongWithQuests";
             this.resetAlongWithQuests.Size = new System.Drawing.Size(280, 18);
             this.resetAlongWithQuests.TabIndex = 11;
             this.resetAlongWithQuests.Text = "是否随任务刷新时间重置";
             this.resetAlongWithQuests.UseVisualStyleBackColor = true;
+            // 
+            // label5
+            // 
+            label5.AutoSize = true;
+            label5.Dock = System.Windows.Forms.DockStyle.Fill;
+            label5.Location = new System.Drawing.Point(3, 110);
+            label5.Margin = new System.Windows.Forms.Padding(3);
+            label5.Name = "label5";
+            label5.Size = new System.Drawing.Size(53, 21);
+            label5.TabIndex = 12;
+            label5.Text = "增量";
+            label5.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            label5.UseCompatibleTextRendering = true;
+            // 
+            // incrementation
+            // 
+            this.incrementation.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.incrementation.Location = new System.Drawing.Point(62, 110);
+            this.incrementation.Maximum = new decimal(new int[] {
+            -1,
+            0,
+            0,
+            0});
+            this.incrementation.Name = "incrementation";
+            this.incrementation.Size = new System.Drawing.Size(221, 21);
+            this.incrementation.TabIndex = 13;
             // 
             // DialogEdit
             // 
@@ -248,7 +280,7 @@
             this.AutoSize = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.CancelButton = this.cancelButton;
-            this.ClientSize = new System.Drawing.Size(292, 195);
+            this.ClientSize = new System.Drawing.Size(292, 222);
             this.Controls.Add(this.tableLayoutPanel2);
             this.Controls.Add(this.tableLayoutPanel1);
             this.MaximizeBox = false;
@@ -264,6 +296,7 @@
             this.tableLayoutPanel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.currentValue)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.totalValue)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.incrementation)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -281,5 +314,6 @@
         private System.Windows.Forms.NumericUpDown totalValue;
         private ElectronicObserver.Window.Control.ColorPicker progressColor;
         private System.Windows.Forms.CheckBox resetAlongWithQuests;
+        private System.Windows.Forms.NumericUpDown incrementation;
     }
 }

@@ -17,7 +17,7 @@ namespace ManualCounter
 
         public override PluginSettingControl GetSettings() { return null; }
 
-        public override string Version { get { return "1.0.0.0"; } }
+        public override string Version { get { return "1.0.0.1"; } }
 
         public override Image MenuIcon { get { return Resource.icon; } }
 
@@ -59,9 +59,13 @@ namespace ManualCounter
 
     public class Counter
     {
-        public Counter() { setResetDate(); }
+        public Counter()
+        {
+            SetResetDate();
+        }
 
-        public string Content { get; set; } = "";
+        private string content = "";
+        public string Content { get { return content; } set { content = value; } }
 
         private Frequency resetFrequency = Frequency.None;
         public Frequency ResetFrequency
@@ -72,7 +76,7 @@ namespace ManualCounter
                 if (resetFrequency != value)
                 {
                     resetFrequency = value;
-                    setResetDate();
+                    SetResetDate();
                 }
             }
         }
@@ -80,6 +84,8 @@ namespace ManualCounter
         public uint CurrentValue { get; set; } = 0;
 
         public uint TotalValue { get; set; } = 0;
+
+        public uint Incrementation { get; set; } = 1;
 
         public DateTime ResetDate { get; set; } = DateTime.Now;
 
@@ -106,11 +112,21 @@ namespace ManualCounter
             }
         }
 
+        public string ButtonText
+        {
+            get
+            {
+                if (TotalValue == 0 || CurrentValue < TotalValue)
+                    return Incrementation < 10 ? "+" + Incrementation : "+N";
+                else return "RE";
+            }
+        }
+
         public void Increase(bool autoReset = false)
         {
             if (TotalValue == 0)
             {
-                CurrentValue++;
+                CurrentValue += Incrementation;
             }
             else
             {
@@ -124,22 +140,20 @@ namespace ManualCounter
                 }
                 else
                 {
-                    CurrentValue++;
+                    CurrentValue += Incrementation;
+                    if (CurrentValue > TotalValue)
+                        CurrentValue = TotalValue;
                 }
             }
-
-            //ManualCounter.Save();
         }
 
         public void Reset()
         {
             CurrentValue = 0;
-            setResetDate();
-
-            //ManualCounter.Save();
+            SetResetDate();
         }
 
-        private void setResetDate()
+        private void SetResetDate()
         {
             if (!ManualCounter.IsLoaded) return;
             DateTime now = DateTime.Now;
@@ -153,9 +167,9 @@ namespace ManualCounter
                     break;
                 case Frequency.Week:
                     if (ResetAlongWithQuests)
-                        ResetDate = new DateTime(now.Year, now.Month, now.Hour > 2 ? now.Day : now.Day - 1, 3, 0, 0, 0) - TimeSpan.FromDays(getDayOfWeek(now) - 1);
+                        ResetDate = new DateTime(now.Year, now.Month, now.Hour > 2 ? now.Day : now.Day - 1, 3, 0, 0, 0) - TimeSpan.FromDays(GetDayOfWeek(now) - 1);
                     else
-                        ResetDate = new DateTime(now.Year, now.Month, now.Day, 0, 0, 0, 0) - TimeSpan.FromDays(getDayOfWeek(now) - 1);
+                        ResetDate = new DateTime(now.Year, now.Month, now.Day, 0, 0, 0, 0) - TimeSpan.FromDays(GetDayOfWeek(now) - 1);
                     break;
                 case Frequency.Month:
                     if (ResetAlongWithQuests)
@@ -172,7 +186,7 @@ namespace ManualCounter
             }
         }
 
-        private int getDayOfWeek(DateTime time)
+        private int GetDayOfWeek(DateTime time)
         {
             switch (time.DayOfWeek)
             {
